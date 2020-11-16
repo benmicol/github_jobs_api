@@ -8,4 +8,12 @@ describe GitJobs do
             end.to output().to_stdout
         end
     end
+    describe '#jobs_api' do
+        it 'returns an integer >= 0' do
+            gj = GitJobs.new 
+            listings = gj.jobs_api("Ruby","Durham") 
+            expect(listings).to be_kind_of(Integer)
+            expect(listings).to be >= 0
+        end
+    end
 end
