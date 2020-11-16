@@ -3,10 +3,10 @@ require 'uri'
 require 'net/http'
 require 'json'
 
-#Define an array of cities and an array of programming languages that will be passed.
+#Define an array of cities.
 cities = ["Boston", "San Francisco", "Los Angeles","Denver","Boulder","Chicago","New York", "Raleigh"]
-
-languages = ["Java","C%23","Python","Swift","Objective-C","Ruby","Kotlin","Golang","C%2B%2B","%22Scala %22"]
+#Define an array of languages. The first element is the language name and the second element is the name formatted for the search query.
+languages = [["Java","java"],["C#","C%23"],["Python","Python"],["Swift","Swift"],["Objective-C","Objective-C"],["Ruby","Ruby"],["Kotlin","Kotlin"],["Go","%22 Go %22 OR Golang"],["C++","C%2B$2B"],["Scala","%22scala %22 OR scala -scalab"]]
 
 #GitJobs main function is to produce a list of Cities and the trending programming languages taken from GitHub Jobs API.
 class GitJobs
@@ -23,9 +23,9 @@ class GitJobs
         #Loop through each language in the array for the current city
         languages.each do |lang| 
           #Add the listing count for the current language to the total
-          count = count + jobs_api(city,lang)
+          count = count + jobs_api(city,lang[1])
           #Push the language name and the number of results to the results array.
-          results.push([URI.decode(lang),jobs_api(city,lang)])
+          results.push([lang[0],jobs_api(city,lang[1])])
         end
         #If the number of results is greater than zero loop through each result in the array to sort and format them to be output.
         if count>0
