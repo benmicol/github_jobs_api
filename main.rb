@@ -6,7 +6,7 @@ require 'json'
 #Define an array of cities and an array of programming languages that will be passed.
 cities = ["Boston", "San Francisco", "Los Angeles","Denver","Boulder","Chicago","New York", "Raleigh"]
 
-languages = ["Java","C#","Python","Swift","Objective-C","Ruby","Kotlin","Golang","C++","Scala"]
+languages = ["Java","C%23","Python","Swift","Objective-C","Ruby","Kotlin","Golang","C%2B%2B","%22Scala %22"]
 
 #GitJobs main function is to produce a list of Cities and the trending programming languages taken from GitHub Jobs API.
 class GitJobs
@@ -25,7 +25,7 @@ class GitJobs
           #Add the listing count for the current language to the total
           count = count + jobs_api(city,lang)
           #Push the language name and the number of results to the results array.
-          results.push([lang,jobs_api(city,lang)])
+          results.push([URI.decode(lang),jobs_api(city,lang)])
         end
         #If the number of results is greater than zero loop through each result in the array to sort and format them to be output.
         if count>0
@@ -54,10 +54,10 @@ class GitJobs
     #jobs_api method takes a programming language and location as arguments and returns the number of positions asking for that language.
     def jobs_api(location, language)
         #GitHub Jobs url
-        url = "https://jobs.github.com/positions.json?location="+location+"&description="+language
+        url = "https://jobs.github.com/positions.json?location="+location+"&description="
         #Escape and parse URL for proper formatting
         escaped_url = URI.escape(url)
-        parsed_url = URI.parse(escaped_url)
+        parsed_url = URI.parse(escaped_url+language)
         #Make the HTTP request
         request = Net::HTTP.get(parsed_url)
         #Parse the JSON response
