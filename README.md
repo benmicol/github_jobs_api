@@ -1,5 +1,5 @@
 # Github Jobs API Coding Test
-A Ruby-based or Kotlin-based app that uses the [Github Jobs API](https://jobs.github.com/api) to help show programming language trends across the following cities:
+A Ruby-based app that uses the [Github Jobs API](https://jobs.github.com/api) to help show programming language trends across the following cities:
 |Cities|Languages|
 |---|---|
 |Boston|Java|
@@ -57,3 +57,5 @@ A Ruby-based or Kotlin-based app that uses the [Github Jobs API](https://jobs.gi
     * Add flexible input to the app so that it can be used with different cities/languages.
 * UI/UX
     * Depending on the use case for this app it may be appropriate to add a user interface.
+* Pagination
+    * It was not an issue in my case but if GitHub Jobs becomes more popular it will be crucial to implement a way to account for pagination in API requests if the number of results is greater than 50.
