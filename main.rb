@@ -89,5 +89,4 @@ class GitJobs
   end
 end
 #Create an instance of GitJobs
-object = GitJobs.new
-object.get_trends(cities,languages)
+GitJobs.new.get_trends(cities,languages)
