@@ -24,8 +24,12 @@ class GitJobs
       job_list.each do |listing|
         @jobs_array.push([city,listing['description']])
       end
-      #Call the match_listings method, passing in the given city.
-      match_listings(city)
+      #Call the match_listings method, passing in the given city, jobs array and languages array.
+      results = match_listings(city,@jobs_array,@languages)
+      #Sum the total number of listings for the given city.
+      count = results.map{|e| e[1]}.reduce(:+)
+      #Call the output method, passing in the city, results array, and count.
+      results_output(city,results,count)
     end
   end
   #API method takes a city as an argument and returns all listings for that city.
@@ -41,30 +45,26 @@ class GitJobs
     #Returns all listings for the given city.
     return response
   end
-  #This method takes a city as an argument and filters through the listings that match each language before adding them to an array.
-  def match_listings(city)
-    #Initialize the count variable to track the total listings that match the programming languages in a given city.
-    count = 0
-    #Initialize the array out results will be added to.
+  #This method takes a city, jobs array and languages array as an argument and filters through the listings that match each language before adding them to an array.
+  def match_listings(city,jobs_array,languages)
+    #Initialize the array our results will be added to.
     results = []
     #Filter for only the job listings in the current city.
-    city_jobs = @jobs_array.select { |n,m| n == city }
+    city_jobs = jobs_array.select { |n,m| n == city }
     #Loop through each language and record the number of matching listings.
-    @languages.each do |lang|
+    languages.each do |lang|
       #Filter for only job listings where the programming language matches our RegEx from the languages array.
       lang_results = city_jobs.select { |n,m| m.match? lang[1]}
-      #Increment the city's counter with the number of matching languages.
-      count = count + lang_results.length
       #Add the language name and number of matching listings to the results array.
       results.push([lang[0],lang_results.length])
     end
-    #Call the output method, passing in the city, results array, and count.
-    output(city,results,count)
+    #Return the results arary
+    return results
   end
   #This method sorts and formats the data for output.
-  def output(city,results,count)
+  def results_output(city,results,count)
     #Output the name of the current city.
-    puts city + ":"
+    puts "#{city}:"
     #If their are a positive number of listings format the results.
     if count>0
       #Loop through each result.
@@ -79,7 +79,7 @@ class GitJobs
         #If the given language has more than zero results
         if item[1] >0
           #Output "- Langauge: 50%"
-          puts "- "+item[0]+": "+item[1].to_s + " %"
+          puts "- #{item[0]}: #{item[1].to_s} %"
         end
       end
     #Otherwise, if the current city has no listings for any of the languages, output "No Results".
@@ -90,6 +90,4 @@ class GitJobs
 end
 #Create an instance of GitJobs
 object = GitJobs.new
-#Call main method passing in the pre-defined arrays of cities and languages.
-#object.main(cities,languages)
 object.get_trends(cities,languages)
