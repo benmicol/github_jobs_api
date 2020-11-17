@@ -3,69 +3,93 @@ require 'uri'
 require 'net/http'
 require 'json'
 
-#Define an array of cities.
+#Define an array of cities that will be passed.
 cities = ["Boston", "San Francisco", "Los Angeles","Denver","Boulder","Chicago","New York", "Raleigh"]
-#Define an array of languages. The first element is the language name and the second element is the name formatted for the search query.
-languages = [["Java","java"],["C#","C%23"],["Python","Python"],["Swift","Swift"],["Objective-C","Objective-C"],["Ruby","Ruby"],["Kotlin","Kotlin"],["Go","%22 Go %22 OR Golang"],["C++","C%2B$2B"],["Scala","%22scala %22 OR scala -scalab"]]
+
+#Define an array of programming languages. The first element is the name of the language and the second element is a Regular Expression that will be passed when filtering for matching listings.
+languages = [["Java",/\bJava\b|\bjava\b/],["C#",/C\#/],["Python",/Python|python/],["Swift",/Swift|swift/],["Objective-C",/Objective-C/],["Ruby",/Ruby|ruby/],["Kotlin",/Kotlin|kotlin/],["Go",/\bGo\b|GoLang|golang|Golang/],["C++",/C\+\+|c\+\+/],["Scala",/\bScala\b|\bscala\b/]]
 
 #GitJobs main function is to produce a list of Cities and the trending programming languages taken from GitHub Jobs API.
-class GitJobs
-    #main method takes the arrays of cities and languages as arguments and loops through each making requests and formatting the results.
-    def main(cities,languages)
-        #Loop through each city in the array
-    cities.each do |city| 
-        #Initialize count for total number of listings across all languages in the respective city
-        count = 0
-        #Initialize array that the results will be pushed to.
-        results = []
-        #Output the header for the city
-        puts city + ":"
-        #Loop through each language in the array for the current city
-        languages.each do |lang| 
-          #Add the listing count for the current language to the total
-          count = count + jobs_api(city,lang[1])
-          #Push the language name and the number of results to the results array.
-          results.push([lang[0],jobs_api(city,lang[1])])
-        end
-        #If the number of results is greater than zero loop through each result in the array to sort and format them to be output.
-        if count>0
-          #Loop through each result
-          results.each do |item|
-            #Convert the number of listings for each language into a percentage.
-            item[1] = (((item[1].to_f / count.to_f) *100).round())
-          end
-          #Sort descending by percentage
-          sorted = results.sort_by{|x,y|y}.reverse
-          #Loop through sorted results filtering out results with zero listings and formatting for output
-          sorted.each do |item|
-            #If the given language has more than zero results
-            if item[1] >0
-              #Output "- Langauge: 50%"
-              puts "- "+item[0]+": "+item[1].to_s + " %"
-            end
-          end
-        #Otherwise, if the current city has no listings for any of the languages, output "No Results".
-        else
-          puts "- No Results"
-        end
+class GitJobs 
+  #get_trends initializes instance variables, taking in cities and languages as arguments and outputs language trends in given cities.
+  def get_trends(cities,languages)
+    #Initialize instance variables
+    @cities = cities
+    @languages = languages
+    @jobs_array = []
+    #Loop through each city making an API request for all jobs.
+    @cities.each do |city|
+      job_list = api_request(city)
+      #Loop through each listing and add the city name and desciption to an array.
+      job_list.each do |listing|
+        @jobs_array.push([city,listing['description']])
       end
+      #Call the match_listings method, passing in the given city.
+      match_listings(city)
     end
-
-    #jobs_api method takes a programming language and location as arguments and returns the number of positions asking for that language.
-    def jobs_api(location, language)
-        #GitHub Jobs url
-        url = "https://jobs.github.com/positions.json?location="+location+"&description="
-        #Escape and parse URL for proper formatting
-        escaped_url = URI.escape(url)
-        parsed_url = URI.parse(escaped_url+language)
-        #Make the HTTP request
-        request = Net::HTTP.get(parsed_url)
-        #Parse the JSON response
-        response = JSON.parse(request)
-        #Return the number of listings
-        response.length
+  end
+  #API method takes a city as an argument and returns all listings for that city.
+  def api_request(city)
+    url = "https://jobs.github.com/positions.json?utf8=%E2%9C%93&description=&location="+city
+    #Escape and parse URL for proper formatting.
+    escaped_url = URI.escape(url)
+    parsed_url = URI.parse(escaped_url)
+    #Make the HTTP request.
+    request = Net::HTTP.get(parsed_url)
+    #Parse the JSON response.
+    response = JSON.parse(request)
+    #Returns all listings for the given city.
+    return response
+  end
+  #This method takes a city as an argument and filters through the listings that match each language before adding them to an array.
+  def match_listings(city)
+    #Initialize the count variable to track the total listings that match the programming languages in a given city.
+    count = 0
+    #Initialize the array out results will be added to.
+    results = []
+    #Filter for only the job listings in the current city.
+    city_jobs = @jobs_array.select { |n,m| n == city }
+    #Loop through each language and record the number of matching listings.
+    @languages.each do |lang|
+      #Filter for only job listings where the programming language matches our RegEx from the languages array.
+      lang_results = city_jobs.select { |n,m| m.match? lang[1]}
+      #Increment the city's counter with the number of matching languages.
+      count = count + lang_results.length
+      #Add the language name and number of matching listings to the results array.
+      results.push([lang[0],lang_results.length])
+    end
+    #Call the output method, passing in the city, results array, and count.
+    output(city,results,count)
+  end
+  #This method sorts and formats the data for output.
+  def output(city,results,count)
+    #Output the name of the current city.
+    puts city + ":"
+    #If their are a positive number of listings format the results.
+    if count>0
+      #Loop through each result.
+      results.each do |item|
+        #Convert the number of listings for each language into a percentage.
+        item[1] = (((item[1].to_f / count.to_f) *100).round())
       end
+      #Sort descending by percentage
+      sorted = results.sort_by{|x,y|y}.reverse
+      #Loop through sorted results filtering out results with zero listings and formatting for output
+      sorted.each do |item|
+        #If the given language has more than zero results
+        if item[1] >0
+          #Output "- Langauge: 50%"
+          puts "- "+item[0]+": "+item[1].to_s + " %"
+        end
+      end
+    #Otherwise, if the current city has no listings for any of the languages, output "No Results".
+    else
+      puts "- No Results"
+    end
+  end
 end
-
-request = GitJobs.new
-request.main(cities,languages)
+#Create an instance of GitJobs
+object = GitJobs.new
+#Call main method passing in the pre-defined arrays of cities and languages.
+#object.main(cities,languages)
+object.get_trends(cities,languages)
