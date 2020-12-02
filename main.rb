@@ -65,7 +65,7 @@ class GitJobs
   def results_output(city,results,count)
     #Output the name of the current city.
     puts "#{city}:"
-    #If their are a positive number of listings format the results.
+    #If there are a positive number of listings format the results.
     if count>0
       #Loop through each result.
       results.each do |item|
